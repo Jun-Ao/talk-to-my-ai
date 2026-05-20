@@ -1,0 +1,235 @@
+:root {
+  color-scheme: light;
+  --blue-50: #f7fbff;
+  --blue-100: #deebff;
+  --blue-200: #b3d4ff;
+  --blue-300: #0747a6;
+  --blue-700: #0747a6;
+  --text: #172b4d;
+  --muted: #5e6c84;
+  --border: #dfe1e6;
+}
+
+body {
+  background: var(--blue-50);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+  min-width: 560px;
+}
+
+.options-shell {
+  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 880px;
+  padding: 24px 20px 28px;
+}
+
+.options-header {
+  margin-bottom: 18px;
+}
+
+.options-header h1 {
+  color: var(--blue-700);
+  font-size: 22px;
+  line-height: 1.25;
+  margin: 0 0 8px;
+}
+
+.options-header p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.options-section {
+  background: #ffffff;
+  border: 1px solid #d6e4ff;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(9, 30, 66, 0.08);
+  margin-bottom: 12px;
+  padding: 14px;
+}
+
+.options-section label {
+  color: var(--blue-700);
+  display: block;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.options-section textarea,
+.template-editor {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-sizing: border-box;
+  color: var(--text);
+  display: block;
+  font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  min-height: 96px;
+  overflow: auto;
+  padding: 10px 12px;
+  resize: vertical;
+  white-space: pre-wrap;
+  word-break: break-word;
+  width: 100%;
+}
+
+.template-editor {
+  min-height: 320px;
+}
+
+.options-section textarea:focus,
+.template-editor:focus {
+  border-color: var(--blue-700);
+  box-shadow: 0 0 0 2px var(--blue-100);
+  outline: none;
+}
+
+.template-token {
+  align-items: center;
+  background: var(--blue-100);
+  border: 1px solid var(--blue-700);
+  border-radius: 999px;
+  color: var(--blue-700);
+  display: inline-flex;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 5px;
+  line-height: 18px;
+  margin: 0 2px;
+  padding: 2px 8px;
+  vertical-align: baseline;
+}
+
+.template-token-remove {
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 16px;
+  opacity: 0.72;
+}
+
+.template-token-remove:hover {
+  opacity: 1;
+}
+
+.options-variables {
+  padding-bottom: 12px;
+}
+
+.variables-heading {
+  color: var(--blue-700);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.variables-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.variable-chip {
+  appearance: none;
+  background: var(--blue-100);
+  border: 1px solid var(--blue-700);
+  border-radius: 999px;
+  color: var(--blue-700);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+  padding: 4px 10px;
+}
+
+.variable-chip:hover {
+  background: #ffffff;
+}
+
+.variable-chip:focus {
+  box-shadow: 0 0 0 2px var(--blue-100);
+  outline: none;
+}
+
+.options-footer {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+@media (min-width: 900px) {
+  body {
+    min-width: 0;
+  }
+
+  .options-shell {
+    padding: 32px 24px 48px;
+  }
+
+  .options-header {
+    margin-bottom: 24px;
+  }
+
+  .options-header h1 {
+    font-size: 26px;
+  }
+
+  .options-section {
+    margin-bottom: 16px;
+    padding: 16px;
+  }
+
+  .options-section textarea,
+  .template-editor {
+    min-height: 110px;
+  }
+
+  .template-editor {
+    min-height: 460px;
+  }
+
+  .options-footer {
+    margin-top: 20px;
+  }
+}
+
+.primary-button,
+.secondary-button {
+  appearance: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  min-height: 36px;
+  padding: 7px 14px;
+}
+
+.primary-button {
+  background: var(--blue-700);
+  border: 1px solid var(--blue-700);
+  color: #ffffff;
+}
+
+.primary-button:hover {
+  background: #0052cc;
+}
+
+.secondary-button {
+  background: #ffffff;
+  border: 1px solid var(--blue-700);
+  color: var(--blue-700);
+}
+
+.secondary-button:hover {
+  background: var(--blue-100);
+}
+
+.status-text {
+  color: var(--muted);
+  min-height: 20px;
+}

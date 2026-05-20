@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>跟我的 AI 说去吧！设置</title>
+    <link rel="stylesheet" href="src/options.css">
+  </head>
+  <body>
+    <main class="options-shell">
+      <header class="options-header">
+        <h1>跟我的 AI 说去吧！</h1>
+        <p>编辑完整 prompt 模板。下方标签可以插入变量，生成时会替换为当前 PR 页面里的真实内容。</p>
+      </header>
+
+      <section class="options-section">
+        <label for="promptTemplate">Prompt 模板</label>
+        <div
+          id="promptTemplateEditor"
+          class="template-editor"
+          contenteditable="true"
+          role="textbox"
+          aria-label="Prompt 模板"
+          spellcheck="false"
+        ></div>
+        <input id="promptTemplate" type="hidden">
+      </section>
+
+      <section class="options-section options-variables">
+        <div class="variables-heading">可插入变量</div>
+        <div class="variables-list" id="variableList"></div>
+      </section>
+
+      <footer class="options-footer">
+        <button id="saveButton" class="primary-button" type="button">保存设置</button>
+        <button id="resetButton" class="secondary-button" type="button">恢复默认</button>
+        <span id="statusText" class="status-text" role="status"></span>
+      </footer>
+    </main>
+
+    <script src="src/options.js"></script>
+  </body>
+</html>
