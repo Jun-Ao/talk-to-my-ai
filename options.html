@@ -10,11 +10,11 @@
     <main class="options-shell">
       <header class="options-header">
         <h1>跟我的 AI 说去吧！</h1>
-        <p>编辑完整 prompt 模板。下方标签可以插入变量，生成时会替换为当前 PR 页面里的真实内容。</p>
+        <p>自定义 prompt 模板。变量标签可以插入到模板中，生成时会替换为当前 PR 页面里的实际内容。</p>
       </header>
 
-      <section class="options-section">
-        <label for="promptTemplate">Prompt 模板</label>
+      <section class="options-section prompt-section">
+        <label class="section-title" for="promptTemplate">Prompt 模板</label>
         <div
           id="promptTemplateEditor"
           class="template-editor"
@@ -24,11 +24,58 @@
           spellcheck="false"
         ></div>
         <input id="promptTemplate" type="hidden">
+
+        <div class="template-variables">
+          <div class="subsection-title">可插入变量</div>
+          <div class="variables-list" id="variableList"></div>
+        </div>
       </section>
 
-      <section class="options-section options-variables">
-        <div class="variables-heading">可插入变量</div>
-        <div class="variables-list" id="variableList"></div>
+      <section class="options-section">
+        <div class="section-title">按钮设置</div>
+        <div class="settings-grid">
+          <div class="setting-field setting-field-wide">
+            <label for="buttonLabel">按钮文字</label>
+            <input id="buttonLabel" class="text-input" type="text" maxlength="40" autocomplete="off">
+          </div>
+
+          <div class="setting-field">
+            <div class="field-label">按钮颜色</div>
+            <div class="color-setting-row">
+              <div id="buttonBackgroundChoices" class="color-choice-list" aria-label="按钮颜色"></div>
+              <input
+                id="buttonBackgroundColorInput"
+                class="color-code-input"
+                type="text"
+                maxlength="18"
+                autocomplete="off"
+                aria-label="自定义按钮颜色"
+                placeholder="#0747A6 / 7,71,166"
+              >
+            </div>
+          </div>
+
+          <div class="setting-field">
+            <div class="field-label">文字和图标颜色</div>
+            <div class="color-setting-row">
+              <div id="buttonTextColorChoices" class="color-choice-list" aria-label="文字和图标颜色"></div>
+              <input
+                id="buttonTextColorInput"
+                class="color-code-input"
+                type="text"
+                maxlength="18"
+                autocomplete="off"
+                aria-label="自定义文字和图标颜色"
+                placeholder="#FFFFFF / 255,255,255"
+              >
+            </div>
+          </div>
+
+          <label class="switch-row setting-field-wide" for="showPreviewButton">
+            <input id="showPreviewButton" type="checkbox">
+            <span>显示预览按钮</span>
+          </label>
+        </div>
       </section>
 
       <footer class="options-footer">

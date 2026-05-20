@@ -52,11 +52,150 @@ body {
   padding: 14px;
 }
 
-.options-section label {
+.section-title {
   color: var(--blue-700);
   display: block;
+  font-size: 16px;
   font-weight: 700;
+  line-height: 22px;
+  margin-bottom: 12px;
+}
+
+.field-label,
+.setting-field label,
+.subsection-title {
+  color: var(--blue-700);
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
   margin-bottom: 8px;
+}
+
+.prompt-section {
+  padding-bottom: 16px;
+}
+
+.template-variables {
+  border-top: 1px solid var(--border);
+  margin-top: 14px;
+  padding-top: 12px;
+}
+
+.subsection-title {
+  color: var(--muted);
+}
+
+.settings-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.setting-field {
+  min-width: 0;
+}
+
+.setting-field-wide {
+  grid-column: 1 / -1;
+}
+
+.text-input {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-sizing: border-box;
+  color: var(--text);
+  display: block;
+  font: inherit;
+  min-height: 36px;
+  padding: 7px 10px;
+  width: 100%;
+}
+
+.text-input:focus {
+  border-color: var(--blue-700);
+  box-shadow: 0 0 0 2px var(--blue-100);
+  outline: none;
+}
+
+.color-choice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.color-setting-row {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.color-choice {
+  appearance: none;
+  background: var(--choice-color);
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px var(--border);
+  box-sizing: border-box;
+  cursor: pointer;
+  height: 28px;
+  padding: 0;
+  width: 28px;
+}
+
+.color-choice:hover {
+  box-shadow: 0 0 0 2px var(--blue-200);
+}
+
+.color-choice:focus {
+  box-shadow: 0 0 0 3px var(--blue-100);
+  outline: none;
+}
+
+.color-choice[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px var(--blue-700);
+}
+
+.color-code-input {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-sizing: border-box;
+  color: var(--text);
+  flex: 1 1 148px;
+  font: 12px/18px ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  min-height: 32px;
+  min-width: 132px;
+  padding: 6px 8px;
+}
+
+.color-code-input:focus {
+  border-color: var(--blue-700);
+  box-shadow: 0 0 0 2px var(--blue-100);
+  outline: none;
+}
+
+.color-code-input[aria-invalid="true"] {
+  border-color: #bf2600;
+  box-shadow: 0 0 0 2px #ffebe6;
+}
+
+.switch-row {
+  align-items: center;
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 600;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.switch-row input {
+  accent-color: var(--blue-700);
+  height: 16px;
+  margin: 0;
+  width: 16px;
 }
 
 .options-section textarea,
@@ -116,20 +255,15 @@ body {
   opacity: 1;
 }
 
-.options-variables {
-  padding-bottom: 12px;
-}
-
-.variables-heading {
-  color: var(--blue-700);
-  font-weight: 700;
-  margin-bottom: 10px;
-}
-
 .variables-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.variable-chip-wrap {
+  display: inline-flex;
+  position: relative;
 }
 
 .variable-chip {
@@ -153,6 +287,47 @@ body {
 .variable-chip:focus {
   box-shadow: 0 0 0 2px var(--blue-100);
   outline: none;
+}
+
+.variable-tooltip {
+  background: var(--text);
+  border-radius: 6px;
+  bottom: calc(100% + 8px);
+  box-shadow: 0 8px 24px rgba(9, 30, 66, 0.2);
+  box-sizing: border-box;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  left: 0;
+  line-height: 1.45;
+  max-width: 320px;
+  min-width: 240px;
+  opacity: 0;
+  padding: 8px 10px;
+  pointer-events: none;
+  position: absolute;
+  text-align: left;
+  transform: translateY(4px);
+  transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease;
+  visibility: hidden;
+  white-space: normal;
+  z-index: 20;
+}
+
+.variable-tooltip::after {
+  border: 6px solid transparent;
+  border-top-color: var(--text);
+  content: "";
+  left: 18px;
+  position: absolute;
+  top: 100%;
+}
+
+.variable-chip-wrap:hover .variable-tooltip,
+.variable-chip-wrap:focus-within .variable-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
 }
 
 .options-footer {
@@ -182,6 +357,10 @@ body {
   .options-section {
     margin-bottom: 16px;
     padding: 16px;
+  }
+
+  .settings-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .options-section textarea,

@@ -32,16 +32,52 @@
     "",
     DEFAULT_PROMPT_OUTRO
   ].join("\n");
+  const DEFAULT_BUTTON_OPTIONS = {
+    buttonLabel: "跟我的 AI 说去吧！",
+    buttonBackgroundColor: "#0747a6",
+    buttonTextColor: "#ffffff",
+    showPreviewButton: true
+  };
+  const BUTTON_BACKGROUND_COLORS = [
+    { label: "Bitbucket 蓝", value: "#0747a6" },
+    { label: "亮蓝", value: "#0052cc" },
+    { label: "绿色", value: "#00875a" },
+    { label: "紫色", value: "#6554c0" },
+    { label: "红色", value: "#bf2600" },
+    { label: "深灰", value: "#42526e" }
+  ];
+  const BUTTON_TEXT_COLORS = [
+    { label: "白色", value: "#ffffff" },
+    { label: "深蓝灰", value: "#172b4d" },
+    { label: "Bitbucket 蓝", value: "#0747a6" },
+    { label: "绿色", value: "#006644" },
+    { label: "红色", value: "#bf2600" },
+    { label: "灰色", value: "#42526e" }
+  ];
 
   const VARIABLES = [
-    { label: "PR 信息", value: "{{PR_INFO}}" },
-    { label: "评论信息", value: "{{COMMENT_INFO}}" }
+    {
+      label: "PR 信息",
+      value: "{{PR_INFO}}",
+      description: "包含 PR 标题、PR 描述，以及页面可见的相关 commit 哈希、作者和提交说明。"
+    },
+    {
+      label: "评论信息",
+      value: "{{COMMENT_INFO}}",
+      description: "包含当前登录用户、评论位置、目标评论、完整对话线程，以及页面中保存的相关 diff 片段。"
+    }
   ];
 
   const templateEditor = document.querySelector("#promptTemplateEditor");
   const hiddenTemplateField = document.querySelector("#promptTemplate");
   const statusText = document.querySelector("#statusText");
   const variableList = document.querySelector("#variableList");
+  const buttonLabelField = document.querySelector("#buttonLabel");
+  const buttonBackgroundChoices = document.querySelector("#buttonBackgroundChoices");
+  const buttonBackgroundColorInput = document.querySelector("#buttonBackgroundColorInput");
+  const buttonTextColorChoices = document.querySelector("#buttonTextColorChoices");
+  const buttonTextColorInput = document.querySelector("#buttonTextColorInput");
+  const showPreviewButtonField = document.querySelector("#showPreviewButton");
 
   function storageGet(defaults) {
     return new Promise((resolve) => {
@@ -75,6 +111,111 @@
         if (statusText.textContent === message) statusText.textContent = "";
       }, 2400);
     }
+  }
+
+  function normalizeColor(value, fallback) {
+    const raw = String(value || "").trim();
+    const hexMatch = raw.match(/^#?([0-9a-f]{6})$/i);
+    if (hexMatch) return `#${hexMatch[1].toLowerCase()}`;
+
+    const rgbMatch = raw.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i) ||
+      raw.match(/^(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})$/);
+    if (rgbMatch) {
+      const channels = rgbMatch.slice(1, 4).map((part) => Number(part));
+      if (channels.every((channel) => Number.isInteger(channel) && channel >= 0 && channel <= 255)) {
+        return `#${channels.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+      }
+    }
+
+    return fallback;
+  }
+
+  function normalizeButtonLabel(value) {
+    const label = String(value || "").replace(/\s+/g, " ").trim();
+    return label || DEFAULT_BUTTON_OPTIONS.buttonLabel;
+  }
+
+  function normalizeButtonOptions(items) {
+    return {
+      buttonLabel: normalizeButtonLabel(items && items.buttonLabel),
+      buttonBackgroundColor: normalizeColor(
+        items && items.buttonBackgroundColor,
+        DEFAULT_BUTTON_OPTIONS.buttonBackgroundColor
+      ),
+      buttonTextColor: normalizeColor(items && items.buttonTextColor, DEFAULT_BUTTON_OPTIONS.buttonTextColor),
+      showPreviewButton: items && typeof items.showPreviewButton === "boolean"
+        ? items.showPreviewButton
+        : DEFAULT_BUTTON_OPTIONS.showPreviewButton
+    };
+  }
+
+  function renderColorChoices(container, input, colors) {
+    container.textContent = "";
+    colors.forEach((color) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "color-choice";
+      button.dataset.color = color.value;
+      button.style.setProperty("--choice-color", color.value);
+      button.title = color.label;
+      button.setAttribute("aria-label", color.label);
+      button.setAttribute("aria-pressed", "false");
+      button.addEventListener("click", () => setColorField(container, input, color.value));
+      container.appendChild(button);
+    });
+  }
+
+  function selectColor(container, value) {
+    const normalized = normalizeColor(value, "").toLowerCase();
+    container.querySelectorAll(".color-choice").forEach((button) => {
+      button.setAttribute("aria-pressed", button.dataset.color.toLowerCase() === normalized ? "true" : "false");
+    });
+  }
+
+  function setColorField(container, input, value) {
+    const normalized = normalizeColor(value, input.value || "");
+    input.value = normalized;
+    input.setAttribute("aria-invalid", normalized ? "false" : "true");
+    selectColor(container, normalized);
+  }
+
+  function handleColorInput(container, input) {
+    const normalized = normalizeColor(input.value, "");
+    input.setAttribute("aria-invalid", input.value.trim() && !normalized ? "true" : "false");
+    selectColor(container, normalized);
+  }
+
+  function selectedColor(container, input, fallback) {
+    const normalizedInput = normalizeColor(input.value, "");
+    if (normalizedInput) return normalizedInput;
+
+    const selected = container.querySelector('.color-choice[aria-pressed="true"]');
+    return normalizeColor(selected && selected.dataset.color, fallback);
+  }
+
+  function setButtonOptions(options) {
+    const nextOptions = normalizeButtonOptions(options);
+    buttonLabelField.value = nextOptions.buttonLabel;
+    showPreviewButtonField.checked = nextOptions.showPreviewButton;
+    setColorField(buttonBackgroundChoices, buttonBackgroundColorInput, nextOptions.buttonBackgroundColor);
+    setColorField(buttonTextColorChoices, buttonTextColorInput, nextOptions.buttonTextColor);
+  }
+
+  function getButtonOptions() {
+    return {
+      buttonLabel: normalizeButtonLabel(buttonLabelField.value),
+      buttonBackgroundColor: selectedColor(
+        buttonBackgroundChoices,
+        buttonBackgroundColorInput,
+        DEFAULT_BUTTON_OPTIONS.buttonBackgroundColor
+      ),
+      buttonTextColor: selectedColor(
+        buttonTextColorChoices,
+        buttonTextColorInput,
+        DEFAULT_BUTTON_OPTIONS.buttonTextColor
+      ),
+      showPreviewButton: showPreviewButtonField.checked
+    };
   }
 
   function createToken(variable) {
@@ -187,27 +328,46 @@
 
   function renderVariables() {
     variableList.textContent = "";
-    VARIABLES.forEach((variable) => {
+    VARIABLES.forEach((variable, index) => {
+      const wrapper = document.createElement("span");
+      wrapper.className = "variable-chip-wrap";
+
       const button = document.createElement("button");
       button.type = "button";
       button.className = "variable-chip";
       button.textContent = variable.label;
-      button.title = `插入 ${variable.value}`;
+      button.title = variable.description;
+      button.setAttribute("aria-describedby", `variable-tooltip-${index}`);
       button.addEventListener("click", () => insertAtCursor(variable));
-      variableList.appendChild(button);
+
+      const tooltip = document.createElement("span");
+      tooltip.id = `variable-tooltip-${index}`;
+      tooltip.className = "variable-tooltip";
+      tooltip.setAttribute("role", "tooltip");
+      tooltip.textContent = variable.description;
+
+      wrapper.append(button, tooltip);
+      variableList.appendChild(wrapper);
     });
   }
 
   async function loadOptions() {
-    const items = await storageGet({ promptTemplate: DEFAULT_PROMPT_TEMPLATE });
+    const items = await storageGet({
+      promptTemplate: DEFAULT_PROMPT_TEMPLATE,
+      ...DEFAULT_BUTTON_OPTIONS
+    });
     renderTemplate(typeof items.promptTemplate === "string" ? items.promptTemplate : DEFAULT_PROMPT_TEMPLATE);
+    setButtonOptions(items);
     syncHiddenField();
   }
 
   async function saveOptions() {
     try {
       syncHiddenField();
-      await storageSet({ promptTemplate: hiddenTemplateField.value });
+      await storageSet({
+        promptTemplate: hiddenTemplateField.value,
+        ...getButtonOptions()
+      });
       setStatus("已保存。");
     } catch (error) {
       console.error("[Talk to My AI] Failed to save options", error);
@@ -217,9 +377,13 @@
 
   async function resetOptions() {
     renderTemplate(DEFAULT_PROMPT_TEMPLATE);
+    setButtonOptions(DEFAULT_BUTTON_OPTIONS);
     syncHiddenField();
     try {
-      await storageSet({ promptTemplate: DEFAULT_PROMPT_TEMPLATE });
+      await storageSet({
+        promptTemplate: DEFAULT_PROMPT_TEMPLATE,
+        ...DEFAULT_BUTTON_OPTIONS
+      });
       setStatus("已恢复默认。");
     } catch (error) {
       console.error("[Talk to My AI] Failed to reset options", error);
@@ -227,7 +391,29 @@
     }
   }
 
+  renderColorChoices(buttonBackgroundChoices, buttonBackgroundColorInput, BUTTON_BACKGROUND_COLORS);
+  renderColorChoices(buttonTextColorChoices, buttonTextColorInput, BUTTON_TEXT_COLORS);
   renderVariables();
+  buttonBackgroundColorInput.addEventListener("input", () => {
+    handleColorInput(buttonBackgroundChoices, buttonBackgroundColorInput);
+  });
+  buttonBackgroundColorInput.addEventListener("blur", () => {
+    setColorField(
+      buttonBackgroundChoices,
+      buttonBackgroundColorInput,
+      selectedColor(buttonBackgroundChoices, buttonBackgroundColorInput, DEFAULT_BUTTON_OPTIONS.buttonBackgroundColor)
+    );
+  });
+  buttonTextColorInput.addEventListener("input", () => {
+    handleColorInput(buttonTextColorChoices, buttonTextColorInput);
+  });
+  buttonTextColorInput.addEventListener("blur", () => {
+    setColorField(
+      buttonTextColorChoices,
+      buttonTextColorInput,
+      selectedColor(buttonTextColorChoices, buttonTextColorInput, DEFAULT_BUTTON_OPTIONS.buttonTextColor)
+    );
+  });
   templateEditor.addEventListener("input", syncHiddenField);
   templateEditor.addEventListener("click", (event) => {
     const remove = event.target.closest(".template-token-remove");

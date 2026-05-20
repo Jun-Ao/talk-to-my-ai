@@ -4,6 +4,7 @@
   const BUTTON_MARK = "data-bpc-copy-prompt";
   const OBSERVER_DEBOUNCE_MS = 250;
   const MAX_CODE_LINES = 120;
+  const IGNORED_COMMENT_AUTHORS = new Set(["superman"]);
   const DEFAULT_PROMPT_INTRO = [
     "# Bitbucket PR Review 评论分析",
     "",
@@ -35,12 +36,55 @@
     "",
     DEFAULT_PROMPT_OUTRO
   ].join("\n");
+  const DEFAULT_BUTTON_OPTIONS = {
+    buttonLabel: "跟我的 AI 说去吧！",
+    buttonBackgroundColor: "#0747a6",
+    buttonTextColor: "#ffffff",
+    showPreviewButton: true
+  };
 
   let observerTimer = null;
+  let buttonOptions = { ...DEFAULT_BUTTON_OPTIONS };
 
   function normalizePromptTemplate(config) {
     if (config && typeof config.promptTemplate === "string") return config.promptTemplate;
     return DEFAULT_PROMPT_TEMPLATE;
+  }
+
+  function normalizeColor(value, fallback) {
+    const raw = String(value || "").trim();
+    const hexMatch = raw.match(/^#?([0-9a-f]{6})$/i);
+    if (hexMatch) return `#${hexMatch[1].toLowerCase()}`;
+
+    const rgbMatch = raw.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i) ||
+      raw.match(/^(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})$/);
+    if (rgbMatch) {
+      const channels = rgbMatch.slice(1, 4).map((part) => Number(part));
+      if (channels.every((channel) => Number.isInteger(channel) && channel >= 0 && channel <= 255)) {
+        return `#${channels.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+      }
+    }
+
+    return fallback;
+  }
+
+  function normalizeButtonLabel(value) {
+    const label = normalizeText(value);
+    return label || DEFAULT_BUTTON_OPTIONS.buttonLabel;
+  }
+
+  function normalizeButtonOptions(config) {
+    return {
+      buttonLabel: normalizeButtonLabel(config && config.buttonLabel),
+      buttonBackgroundColor: normalizeColor(
+        config && config.buttonBackgroundColor,
+        DEFAULT_BUTTON_OPTIONS.buttonBackgroundColor
+      ),
+      buttonTextColor: normalizeColor(config && config.buttonTextColor, DEFAULT_BUTTON_OPTIONS.buttonTextColor),
+      showPreviewButton: config && typeof config.showPreviewButton === "boolean"
+        ? config.showPreviewButton
+        : DEFAULT_BUTTON_OPTIONS.showPreviewButton
+    };
   }
 
   function readPromptTemplate() {
@@ -63,6 +107,27 @@
       } catch (error) {
         console.warn("[Talk to My AI] Failed to read prompt template", error);
         resolve(DEFAULT_PROMPT_TEMPLATE);
+      }
+    });
+  }
+
+  function readButtonOptions() {
+    const storage = globalThis.chrome && chrome.storage && chrome.storage.sync;
+    if (!storage) return Promise.resolve({ ...DEFAULT_BUTTON_OPTIONS });
+
+    return new Promise((resolve) => {
+      try {
+        storage.get(DEFAULT_BUTTON_OPTIONS, (items) => {
+          if (chrome.runtime && chrome.runtime.lastError) {
+            console.warn("[Talk to My AI] Failed to read button options", chrome.runtime.lastError);
+            resolve({ ...DEFAULT_BUTTON_OPTIONS });
+            return;
+          }
+          resolve(normalizeButtonOptions(items));
+        });
+      } catch (error) {
+        console.warn("[Talk to My AI] Failed to read button options", error);
+        resolve({ ...DEFAULT_BUTTON_OPTIONS });
       }
     });
   }
@@ -133,6 +198,14 @@
     ].map(normalizeIdentity).filter(Boolean);
 
     return candidates.some((candidate) => authorKey === candidate || authorKey.includes(candidate));
+  }
+
+  function getCommentAuthor(comment) {
+    return textOf(comment.querySelector(".comment-header-text .user-name")) || textOf(comment.querySelector(".user-name"));
+  }
+
+  function shouldIgnoreComment(comment) {
+    return IGNORED_COMMENT_AUTHORS.has(normalizeIdentity(getCommentAuthor(comment)));
   }
 
   function getPrInfo() {
@@ -398,7 +471,7 @@
     const comments = Array.from(thread.querySelectorAll(".comment[data-comment-id]"));
 
     return comments.map((comment, index) => {
-      const author = textOf(comment.querySelector(".comment-header-text .user-name")) || textOf(comment.querySelector(".user-name"));
+      const author = getCommentAuthor(comment);
       const timestamp = textOf(comment.querySelector(".comment-timestamp"));
       const id = comment.getAttribute("data-comment-id") || "";
       const body = extractCommentBody(comment);
@@ -719,6 +792,38 @@
     panel.hidden = true;
   }
 
+  function getButtonDefaultLabel(button) {
+    return button.dataset.defaultLabel || DEFAULT_BUTTON_OPTIONS.buttonLabel;
+  }
+
+  function applyButtonOptions(control, options) {
+    const nextOptions = normalizeButtonOptions(options);
+    const copyButton = control.querySelector(".bpc-copy-prompt-button--main");
+    const previewButton = control.querySelector(".bpc-copy-prompt-button--preview");
+
+    control.style.setProperty("--bpc-button-bg", nextOptions.buttonBackgroundColor);
+    control.style.setProperty("--bpc-button-fg", nextOptions.buttonTextColor);
+
+    if (copyButton) {
+      copyButton.dataset.defaultLabel = nextOptions.buttonLabel;
+      if (!copyButton.classList.contains("bpc-copy-prompt-button--ok") &&
+          !copyButton.classList.contains("bpc-copy-prompt-button--error")) {
+        copyButton.textContent = nextOptions.buttonLabel;
+      }
+    }
+
+    if (previewButton) {
+      previewButton.hidden = !nextOptions.showPreviewButton;
+      control.classList.toggle("bpc-copy-prompt-control--preview-hidden", !nextOptions.showPreviewButton);
+    }
+  }
+
+  function applyButtonOptionsToAll(options) {
+    document.querySelectorAll(".bpc-copy-prompt-control").forEach((control) => {
+      applyButtonOptions(control, options);
+    });
+  }
+
   function createButton(comment) {
     const item = document.createElement("li");
     item.className = "action-item bpc-copy-prompt-item";
@@ -730,7 +835,8 @@
     const copyButton = document.createElement("button");
     copyButton.type = "button";
     copyButton.className = "bpc-copy-prompt-button bpc-copy-prompt-button--main";
-    copyButton.textContent = "跟我的 AI 说去吧！";
+    copyButton.textContent = buttonOptions.buttonLabel;
+    copyButton.dataset.defaultLabel = buttonOptions.buttonLabel;
     copyButton.title = "复制这条评论线程的 prompt";
 
     const previewButton = document.createElement("button");
@@ -750,11 +856,11 @@
         const prompt = await getPromptForComment(comment);
         await copyText(prompt);
         setButtonState(copyButton, "ok", "已复制");
-        setTimeout(() => setButtonState(copyButton, "", "跟我的 AI 说去吧！"), 1600);
+        setTimeout(() => setButtonState(copyButton, "", getButtonDefaultLabel(copyButton)), 1600);
       } catch (error) {
         console.error("[Bitbucket PR Prompt Copier] Copy failed", error);
         setButtonState(copyButton, "error", "复制失败");
-        setTimeout(() => setButtonState(copyButton, "", "跟我的 AI 说去吧！"), 2200);
+        setTimeout(() => setButtonState(copyButton, "", getButtonDefaultLabel(copyButton)), 2200);
       }
     });
 
@@ -771,6 +877,7 @@
     });
 
     control.append(copyButton, previewButton);
+    applyButtonOptions(control, buttonOptions);
     item.appendChild(control);
     return item;
   }
@@ -784,10 +891,15 @@
     const comments = Array.from(document.querySelectorAll(".comment[data-comment-id]"));
 
     comments.forEach((comment) => {
-      if (comment.querySelector(`[${BUTTON_MARK}="true"]`)) return;
-
       const actionList = findActionList(comment);
+
+      if (shouldIgnoreComment(comment)) {
+        if (actionList) actionList.querySelectorAll(`[${BUTTON_MARK}="true"]`).forEach((item) => item.remove());
+        return;
+      }
+
       if (!actionList) return;
+      if (actionList.querySelector(`[${BUTTON_MARK}="true"]`)) return;
 
       actionList.appendChild(createButton(comment));
     });
@@ -806,10 +918,35 @@
     });
   }
 
+  function watchButtonOptions() {
+    if (!globalThis.chrome || !chrome.storage || !chrome.storage.onChanged) return;
+
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName !== "sync") return;
+      const changed = [
+        "buttonLabel",
+        "buttonBackgroundColor",
+        "buttonTextColor",
+        "showPreviewButton"
+      ].some((key) => Object.prototype.hasOwnProperty.call(changes, key));
+      if (!changed) return;
+
+      readButtonOptions().then((options) => {
+        buttonOptions = options;
+        applyButtonOptionsToAll(buttonOptions);
+      });
+    });
+  }
+
   function init() {
     injectButtons();
     startObserver();
     document.addEventListener("click", closePromptPreviewOnOutsideClick, true);
+    readButtonOptions().then((options) => {
+      buttonOptions = options;
+      applyButtonOptionsToAll(buttonOptions);
+    });
+    watchButtonOptions();
   }
 
   if (document.readyState === "loading") {
