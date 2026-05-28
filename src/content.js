@@ -205,7 +205,8 @@
   }
 
   function shouldIgnoreComment(comment) {
-    return IGNORED_COMMENT_AUTHORS.has(normalizeIdentity(getCommentAuthor(comment)));
+    const author = getCommentAuthor(comment);
+    return IGNORED_COMMENT_AUTHORS.has(normalizeIdentity(author)) || isCurrentUser(author, getCurrentUser());
   }
 
   function getPrInfo() {
@@ -673,6 +674,15 @@
     button.textContent = label;
   }
 
+  function lockButtonWidth(button) {
+    const width = button.getBoundingClientRect().width;
+    if (width > 0) button.style.width = `${Math.ceil(width)}px`;
+  }
+
+  function unlockButtonWidth(button) {
+    button.style.width = "";
+  }
+
   async function getPromptForComment(comment) {
     const thread = comment.closest(".comments-thread") || comment;
     const promptTemplate = await readPromptTemplate();
@@ -850,17 +860,24 @@
       event.preventDefault();
       event.stopPropagation();
 
+      lockButtonWidth(copyButton);
       setButtonState(copyButton, "", "生成中...");
 
       try {
         const prompt = await getPromptForComment(comment);
         await copyText(prompt);
         setButtonState(copyButton, "ok", "已复制");
-        setTimeout(() => setButtonState(copyButton, "", getButtonDefaultLabel(copyButton)), 1600);
+        setTimeout(() => {
+          setButtonState(copyButton, "", getButtonDefaultLabel(copyButton));
+          unlockButtonWidth(copyButton);
+        }, 1600);
       } catch (error) {
         console.error("[Bitbucket PR Prompt Copier] Copy failed", error);
         setButtonState(copyButton, "error", "复制失败");
-        setTimeout(() => setButtonState(copyButton, "", getButtonDefaultLabel(copyButton)), 2200);
+        setTimeout(() => {
+          setButtonState(copyButton, "", getButtonDefaultLabel(copyButton));
+          unlockButtonWidth(copyButton);
+        }, 2200);
       }
     });
 
