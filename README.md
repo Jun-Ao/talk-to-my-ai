@@ -31,10 +31,24 @@
 
 ## 加载方式
 
+### 从 Chrome 应用商店安装
+
+打开 Chrome 应用商店页面并点击安装：
+
+[跟我的 AI 说去吧！](https://chromewebstore.google.com/detail/%E8%B7%9F%E6%88%91%E7%9A%84-ai-%E8%AF%B4%E5%8E%BB%E5%90%A7%EF%BC%81/omkedemdiomoplblebdcgbbhboilnkje)
+
+### 从 GitHub 源码本地加载
+
+源码仓库：
+
+[Jun-Ao/talk-to-my-ai](https://github.com/Jun-Ao/talk-to-my-ai)
+
+下载源码后，可以按下面的方式本地加载：
+
 1. 打开 Chrome：`chrome://extensions/`
 2. 打开右上角 `开发者模式`
 3. 点击 `加载已解压的扩展程序`
-4. 选择本目录：`Talk to My AI`
+4. 选择扩展源码目录：`Talk to My AI`
 
 ## 配置方式
 
@@ -53,16 +67,6 @@
 3. 点击 `扩展程序选项`
 4. 编辑 Prompt 模板，或点击变量标签插入变量
 5. 点击 `保存设置`
-
-## 本地 HTML 测试
-
-`manifest.json` 已包含 `file:///*`，方便测试 SingleFile 保存的页面。
-
-如果要让扩展作用于本地 `case1.html`：
-
-1. 在 `chrome://extensions/` 里找到本扩展
-2. 打开 `允许访问文件网址`
-3. 用 Chrome 打开 `case1.html`
 
 ## 适配说明
 
