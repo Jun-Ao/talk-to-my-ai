@@ -5,3 +5,7 @@
 Thumbs.db
 .idea/
 node_modules/
+.output/
+.wxt/
+stats.html
+stats-*.json
